@@ -1,14 +1,12 @@
-# Usa una imagen base con Java 17 (puedes ajustar si usas otra versión)
-FROM eclipse-temurin:17-jdk
-
-# Establece el directorio de trabajo dentro del contenedor
+# Etapa 1: Build del proyecto con Maven y Java 17
+FROM maven:3.9.5-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copia el archivo JAR al contenedor
-COPY target/microservice-0.0.1-SNAPSHOT.jar app.jar
-
-# Expone el puerto (Render usa este para redirigir tráfico)
+# Etapa 2: Imagen final que corre el JAR
+FROM eclipse-temurin:17-jdk
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-# Comando para ejecutar el JAR
 ENTRYPOINT ["java", "-jar", "app.jar"]
